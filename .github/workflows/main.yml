@@ -1,11 +1,9 @@
-name: Checkmarx One Scan
+name: Checkmarx-AST Github Action
 on:
-  workflow_dispatch:
 # push:
 #   branches:
-#     - main
-#     - master
-#     - dev
+#     - nextgen-dev      
+  workflow_dispatch:
 
 jobs:
   build:
@@ -16,8 +14,15 @@ jobs:
       - name: Checkmarx One CLI Action
         uses: checkmarx/ast-github-action@main #Github Action version
         with:
+          # optional, default is ${{ github.repository }}
           project_name: ${{ github.repository }}
+          # optional, default is ${{ github.head_ref || github.ref }}
+          branch: ${{ github.head_ref || github.ref }}
+          # Provide the Tenant for AST portal URL
           cx_tenant: dxc-beam-suntory
+          # Provide the AST portal URL
           base_uri: https://us.ast.checkmarx.net
+          # Client ID for AST portal authentication
           cx_client_id: ${{ secrets.CX_CLIENT_ID }}
+          # Secret key for AST portal authentication
           cx_client_secret: ${{ secrets.CX_CLIENT_SECRET }}
