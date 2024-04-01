@@ -1,28 +1,37 @@
 name: Checkmarx-AST Github Action
+
 on:
-# push:
-#   branches:
-#     - nextgen-dev      
   workflow_dispatch:
 
 jobs:
-  build:
+  security_scan:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.0
+      
+      # Checkmarx One CLI Action step
       - name: Checkmarx One CLI Action
-        uses: checkmarx/ast-github-action@main #Github Action version
+        uses: checkmarx/ast-github-action@main
         with:
-          # optional, default is ${{ github.repository }}
           project_name: ${{ github.repository }}
-          # optional, default is ${{ github.head_ref || github.ref }}
           branch: ${{ github.head_ref || github.ref }}
-          # Provide the Tenant for AST portal URL
           cx_tenant: dxc-beam-suntory
-          # Provide the AST portal URL
           base_uri: https://us.ast.checkmarx.net
-          # Client ID for AST portal authentication
           cx_client_id: ${{ secrets.CX_CLIENT_ID }}
-          # Secret key for AST portal authentication
           cx_client_secret: ${{ secrets.CX_CLIENT_SECRET }}
+        continue-on-error: true # Allows the job to continue even if this step fails
+        id: checkmarx-scan
+
+      # Step to check if the previous step failed
+      - name: Check Scan Status
+        if: steps.checkmarx-scan.outcome == 'failure'
+        run: |
+          echo "Checkmarx scan failed. Review required before proceeding."
+          echo "Scan details can be reviewed in the Checkmarx portal."
+          exit 1 # This will cause the job to fail explicitly due to scan failure
+
+      # Subsequent step that would run if the scan doesn't fail (or if continue-on-error is true)
+      - name: Subsequent Step
+        run: |
+          echo "This step runs after the Checkmarx scan. It can be any step, like deploying to a test environment."
